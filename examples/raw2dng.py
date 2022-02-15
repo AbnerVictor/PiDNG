@@ -9,9 +9,9 @@ bpp= 12
 
 # load raw data into 16-bit numpy array.
 numPixels = width*height
-rawFile = 'extras/scene_daylight_211ms_c2.raw16'
+rawFile = '../extras/scene_daylight_211ms_c2.raw16'
 rf = open(rawFile, mode='rb')
-rawData = struct.unpack("H"*numPixels,rf.read(2*numPixels))
+rawData = struct.unpack("H"*numPixels, rf.read(2*numPixels))
 rawFlatImage = np.zeros(numPixels, dtype=np.uint16)
 rawFlatImage[:] = rawData[:] 
 rawImage = np.reshape(rawFlatImage,(height,width))
@@ -46,4 +46,4 @@ t.set(Tag.Model, "Camera Model")
 t.set(Tag.PreviewColorSpace, 2)
 
 # save to dng file.
-RAW2DNG().convert(rawImage, tags=t, filename="custom", path="")
+RAW2DNG().convert(rawImage, tags=t, filename="custom", path="../extras")
