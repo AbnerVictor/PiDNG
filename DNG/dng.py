@@ -118,12 +118,13 @@ class smv_dng(object):
             dngtag.subIFDs = []
             for id in subIFD_ids:
                 dngtag.subIFDs.append(self.Ifd2dngIFD(self.IFDs[id]))
-            print(dngtag.subIFDs)
         return dngtag
 
     def Ifd2dngIFD(self, ifd: Ifd):
         IFD = dngIFD()
         IFD.offset = ifd.offset
+        print(IFD.offset)
+
         for tagID, tag in ifd.tags.items():
             dngtag = self.Tag2dngTag(tag)
             IFD.tags.append(dngtag)
