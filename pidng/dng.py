@@ -142,7 +142,127 @@ class Tag:
     BaselineExposureOffset      = (51109,Type.Srational) # 1.4 Spec says rational but mentions negative values?
     DefaultBlackRender          = (51110,Type.Long)
     NewRawImageDigest           = (51111,Type.Byte)
-    
+
+
+Id2Type = {0: Type.Invalid,
+        254: Type.Long,
+        256: Type.Long,
+        257: Type.Long,
+        258: Type.Short,
+        259: Type.Short,
+        262: Type.Short,
+        266: Type.Short,
+        270: Type.Ascii,
+        271: Type.Ascii,
+        272: Type.Ascii,
+        273: Type.Long,
+        274: Type.Short,
+        277: Type.Short,
+        278: Type.Short,
+        279: Type.Long,
+        282: Type.Rational,
+        283: Type.Rational,
+        284: Type.Short,
+        296: Type.Short,
+        305: Type.Ascii,
+        306: Type.Ascii,
+        315: Type.Ascii,
+        317: Type.Short,
+        322: Type.Short,
+        323: Type.Short,
+        324: Type.Long,
+        325: Type.Long,
+        330: Type.IFD,
+        700: Type.Undefined,
+        33421: Type.Short,
+        33422: Type.Byte,
+        33432: Type.Ascii,
+        33434: Type.Rational,
+        33437: Type.Rational,
+        34665: Type.IFD,
+        34850: Type.Short,
+        34855: Type.Short,
+        34864: Type.Short,
+        36864: Type.Undefined,
+        36867: Type.Ascii,
+        37377: Type.Srational,
+        37378: Type.Rational,
+        37380: Type.Srational,
+        37381: Type.Rational,
+        37382: Type.Rational,
+        37383: Type.Short,
+        37385: Type.Short,
+        37386: Type.Rational,
+        37398: Type.Byte,
+        37520: Type.Ascii,
+        37521: Type.Ascii,
+        41486: Type.Rational,
+        41487: Type.Rational,
+        41488: Type.Short,
+        41989: Type.Short,
+        42033: Type.Ascii,
+        42036: Type.Ascii,
+        50706: Type.Byte,
+        50707: Type.Byte,
+        50708: Type.Ascii,
+        50710: Type.Byte,
+        50711: Type.Short,
+        50712: Type.Short,
+        50713: Type.Short,
+        50714: Type.Short,
+        50717: Type.Short,
+        50718: Type.Rational,
+        50719: Type.Long,
+        50720: Type.Long,
+        50721: Type.Srational,
+        50722: Type.Srational,
+        50723: Type.Srational,
+        50724: Type.Srational,
+        50727: Type.Rational,
+        50728: Type.Rational,
+        50730: Type.Srational,
+        50731: Type.Rational,
+        50732: Type.Rational,
+        50733: Type.Long,
+        50734: Type.Rational,
+        50735: Type.Ascii,
+        50738: Type.Rational,
+        50739: Type.Rational,
+        50740: Type.Byte,
+        50741: Type.Short,
+        50778: Type.Short,
+        50779: Type.Short,
+        50780: Type.Rational,
+        50781: Type.Byte,
+        50829: Type.Long,
+        50931: Type.Ascii,
+        50932: Type.Ascii,
+        50935: Type.Rational,
+        50936: Type.Ascii,
+        50937: Type.Long,
+        50938: Type.Float,
+        50939: Type.Float,
+        50940: Type.Float,
+        50941: Type.Long,
+        50964:  Type.Srational,
+        50965:  Type.Srational,
+        50966: Type.Ascii,
+        50967: Type.Ascii,
+        50969: Type.Byte,
+        50970: Type.Long,
+        50971: Type.Ascii,
+        51041: Type.Double,
+        51043: Type.Byte,
+        51044: Type.Srational,
+        51008: Type.Undefined,
+        51009: Type.Undefined,
+        51081: Type.Ascii,
+        51109: Type.Srational, # 1.4 Spec says rational but mentions negative values?
+        51110: Type.Long,
+        51111: Type.Byte}
+
+def tagId2tagType(tagId):
+    return (tagId, Id2Type[tagId])
     
 class dngHeader(object):
     def __init__(self):
@@ -160,13 +280,19 @@ class dngTag(object):
         self.DataOffset = 0
 
         self.subIFD = None
-        
-        self.setValue(value)
-        
+
+        try:
+            self.setValue(value)
+        except Exception as e:
+            print(self.TagId, self.DataType, value)
+            raise e
+
         self.DataLength = len(self.Value)
 
-        if (self.DataLength <= 4): self.selfContained = True
-        else:                      self.selfContained = False
+        if (self.DataLength <= 4):
+            self.selfContained = True
+        else:
+            self.selfContained = False
 
     def setValue(self, value):
         if   self.DataType == Type.Byte:      self.Value = struct.pack('<%sB' % len(value), *value)
@@ -184,8 +310,7 @@ class dngTag(object):
             self.Value = struct.pack('<%ssx0L' % len(value), bytearray(value.encode("ascii")))
             self.DataCount += 1
         elif self.DataType == Type.IFD:
-            self.Value = "\x00\x00\x00\x00"
-            self.subIFD = value[0]
+            self.Value = struct.pack('<%sL' % len(value), *value)
         self.Value += str.encode('\x00'*(((len(self.Value)+3) & 0xFFFFFFFC) - len(self.Value)))
         
 
