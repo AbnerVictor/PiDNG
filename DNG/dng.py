@@ -26,6 +26,7 @@ class smv_dng(object):
         # read dng headers
         self.endian, self.IFDoffsets = self.read_header(path)
         self.IFDStrips = {}
+        self.IFDTiles = {}
 
         # load IFDs
         self.IFDs = get_image_ifds(path, verbose=False)
@@ -33,6 +34,8 @@ class smv_dng(object):
 
         # load data Stripes
         self.load_strips(path)
+
+        # TODO load tiles
 
     def read_header(self, path):
         with open(path, 'rb') as binary:
@@ -131,7 +134,7 @@ class smv_dng(object):
 
 
 if __name__ == '__main__':
-    dng_path = '../extras/custom.dng'
+    dng_path = '../extras/IMG_4155.dng'
     # dng_path = '../extras/IMG_4155_dummy.dng'
     my_dng = smv_dng(dng_path)
-    my_dng.write('../extras/custom_dummy.dng')
+    my_dng.write('../extras/IMG_4155_dummy.dng')
