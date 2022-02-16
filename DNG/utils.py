@@ -24,7 +24,7 @@ class Type:
     Srational = (10, 8)  # 2 Slongs, numerator:denominator
     Float = (11, 4)  # 32bit float IEEE
     Double = (12, 8)  # 64bit double IEEE
-    IFD = (13, 4)  # IFD (Same as Long)
+    IFD = (4, 4)  # IFD (Same as Long)
 
 
 class Tag:
@@ -359,18 +359,19 @@ class dngTag(object):
         if not self.buf:
             raise RuntimeError("buffer not initialized")
 
-        if self.subIFD:
-            self.subIFD.write()
-            tagData = struct.pack("<HHII", self.TagId, Type.Long[0], self.DataCount, self.DataOffset)
+        if self.selfContained:
+            tagData = struct.pack("<HHI4s", self.TagId, self.DataType[0], self.DataCount, self.Value)
             struct.pack_into("<12s", self.buf, self.TagOffset, tagData)
         else:
-            if self.selfContained:
-                tagData = struct.pack("<HHI4s", self.TagId, self.DataType[0], self.DataCount, self.Value)
-                struct.pack_into("<12s", self.buf, self.TagOffset, tagData)
-            else:
-                tagData = struct.pack("<HHII", self.TagId, self.DataType[0], self.DataCount, self.DataOffset)
-                struct.pack_into("<12s", self.buf, self.TagOffset, tagData)
-                struct.pack_into("<%ds" % (self.DataLength), self.buf, self.DataOffset, self.Value)
+            tagData = struct.pack("<HHII", self.TagId, self.DataType[0], self.DataCount, self.DataOffset)
+            struct.pack_into("<12s", self.buf, self.TagOffset, tagData)
+            struct.pack_into("<%ds" % (self.DataLength), self.buf, self.DataOffset, self.Value)
+
+        if self.subIFD:
+            for ifd in self.subIFD:
+                ifd.write()
+            # tagData = struct.pack("<HHII", self.TagId, Type.Long[0], self.DataCount, self.DataOffset)
+            # struct.pack_into("<12s", self.buf, self.TagOffset, tagData)
 
 
 class dngIFD(object):
@@ -390,11 +391,11 @@ class dngIFD(object):
             currentDataOffset = dataoffset  # 也可以指定offset位置
 
         for tag in sorted(self.tags, key=lambda x: x.TagId):
-            print(tag.TagId, currentTagOffset, currentDataOffset)
+            # print(tag.TagId, currentTagOffset, currentDataOffset)
             tag.setBuffer(buf, currentTagOffset, currentDataOffset)
             currentTagOffset += 12
             currentDataOffset += tag.dataLen()
-            print(tag.TagId, tag.dataLen())
+            # print(tag.TagId, tag.dataLen())
             # currentDataOffset = (currentDataOffset + 3) & 0xFFFFFFFC
 
     def dataLen(self):
@@ -443,8 +444,7 @@ class DNG(object):
         return (totalLength + 3) & 0xFFFFFFFC
 
     def write(self):
-        struct.pack_into("<ccbbI", self.buf, 0, b'I', b'I', 0x2A, 0x00,
-                         8)  # assume the first IFD happens immediately after header
+        struct.pack_into("<ccbbI", self.buf, 0, b'I', b'I', 0x2A, 0x00, 8)  # assume the first IFD happens immediately after header
 
         for ifd in self.IFDs:
             ifd.write()

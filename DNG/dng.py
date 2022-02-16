@@ -42,9 +42,9 @@ class smv_dng(object):
             # byte storage direction (endian):
             # +1: b'M' (big-endian/Motorola)
             # -1: b'I' (little-endian/Intel)
-            endian = 1 if b0 == b'M' else -1
+            # endian = 1 if b0 == b'M' else -1
             # print("Endian = {}".format(b0))
-            endian_sign = "<" if endian == -1 else ">"  # used in struct.unpack
+            endian_sign = "<" if b0 == b'I' else ">"  # used in struct.unpack
             # print("Endian sign = {}".format(endian_sign))
 
             # Version
@@ -77,7 +77,7 @@ class smv_dng(object):
 
         dngtag.TagOffset = tag.offset
 
-        if dngtag.DataType == Type.IFD:
+        if tag.tag_num == 330 or tag.tag_num == 34665:
             subIFD_ids = tag.values
             dngtag.subIFD = []
             for i in range(len(subIFD_ids)):
@@ -95,11 +95,17 @@ class smv_dng(object):
 
     def write(self, path):
         dngTemplate = DNG()
-        with open(path, 'w+') as binary:
-            self.mainIFD.setBuffer(binary, self.IFDoffsets[0])
+        with open(path, 'wb') as binary:
+            dngTemplate.IFDs.append(self.mainIFD)
+            totalLength = dngTemplate.dataLen()
+            buf = bytearray(totalLength)
+            dngTemplate.setBuffer(buf)
+            dngTemplate.write()
+            binary.write(buf)
 
 
 if __name__ == '__main__':
     dng_path = '../extras/IMG_4155.dng'
+    # dng_path = '../extras/IMG_4155_dummy.dng'
     my_dng = smv_dng(dng_path)
     my_dng.write('../extras/IMG_4155_dummy.dng')

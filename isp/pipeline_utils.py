@@ -32,7 +32,7 @@ def get_image_tags(image_path):
 
 
 def get_image_ifds(image_path):
-    ifds = parse_exif(image_path, verbose=False)
+    ifds = parse_exif(image_path, verbose=True)
     return ifds
 
 
