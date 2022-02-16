@@ -5,10 +5,10 @@ import struct
 from fractions import Fraction
 from .exif_data_formats import exif_formats
 
-
 class Ifd:
     def __init__(self):
         self.offset = -1
+        self.nextIFDoffset = 0
         self.tags = {}  # <key, tag> dict; tag number will be key.
 
 
@@ -57,7 +57,7 @@ def parse_exif(image_path, verbose=True):
             print_("=========== Parsing IFD # {} ===========".format(i))
             ifd_ = parse_exif_ifd(fid, offset_, endian_sign, verbose)
             ifds.update({ifd_.offset: ifd_})
-            print_("=========== Finished parsing IFD # {} ===========".format(i))
+            print_("=========== Finished parsing IFD # {}, Offset to next IFD: {} ===========".format(i, ifd_.nextIFDoffset))
             i += 1
             # check SubIFDs; zero or more offsets at tag 0x014a
             sub_idfs_tag_num = int('0x014a', 16)
@@ -87,11 +87,13 @@ def parse_exif_ifd(binary_file, offset_, endian_sign, verbose=True):
     print_("Number of entries = {}".format(num_entries))
     for t in range(num_entries):
         print_("---------- Tag {} / {} ----------".format(t + 1, num_entries))
-        if t == 22:
-            ttt = 1
+        # if t == 22:
+        #     ttt = 1
         tag_ = parse_exif_tag(binary_file, endian_sign, verbose)
         ifd.tags.update({tag_.tag_num: tag_})  # supposedly, EXIF tag numbers won't repeat in the same IFD
     # TODO: check for subsequent IFDs by parsing the next 4 bytes immediately after the IFD
+    next_ifd = struct.unpack(endian_sign + "L", binary_file.read(4))
+    ifd.nextIFDoffset = next_ifd[0]
     return ifd
 
 

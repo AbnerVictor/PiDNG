@@ -1,4 +1,5 @@
 import struct
+import copy
 import sys
 import os, io
 import time
@@ -391,11 +392,9 @@ class dngIFD(object):
             currentDataOffset = dataoffset  # 也可以指定offset位置
 
         for tag in sorted(self.tags, key=lambda x: x.TagId):
-            # print(tag.TagId, currentTagOffset, currentDataOffset)
             tag.setBuffer(buf, currentTagOffset, currentDataOffset)
             currentTagOffset += 12
             currentDataOffset += tag.dataLen()
-            # print(tag.TagId, tag.dataLen())
             # currentDataOffset = (currentDataOffset + 3) & 0xFFFFFFFC
 
     def dataLen(self):
@@ -416,6 +415,54 @@ class dngIFD(object):
         struct.pack_into("<I", self.buf, self.offset + 2 + len(self.tags) * 12, self.NextIFDOffset)
 
 
+class dngStrip(object):
+    def __init__(self, ifdOffset, offset):
+        self.ifdOffset = ifdOffset
+        self.offset = offset
+        self.rowPerStrip = []
+        self.byteCounts = []
+        self.data = []
+
+    def stripCount(self):
+        return len(self.offset)
+
+    def dataLen(self):
+        return sum(self.byteCounts)
+
+    def setBuffer(self, buf, offset, IFDs):
+        self.buf = buf
+
+        # update strip offset
+        ori_offsets = self.offset
+        self.offset = [offset + self.byteCounts[i] for i in range(self.stripCount())]
+
+        # update tag 273
+        def traverseIFD(ifd):
+            assert isinstance(ifd, dngIFD)
+            for tag in ifd.tags:
+                assert isinstance(tag, dngTag)
+                if tag.TagId == Tag.StripOffsets[0]:
+                    targetTag = copy.deepcopy(tag)
+                    targetTag.setValue(ori_offsets)
+                    if targetTag.Value == tag.Value:
+                        tag.setValue(self.offset)
+                        break
+                elif tag.subIFD:
+                    for ifd in tag.subIFD:
+                        traverseIFD(ifd)
+
+        for ifd in IFDs:
+            traverseIFD(ifd)
+
+    def write(self):
+        if not self.buf:
+            raise RuntimeError("buffer not initialized")
+
+        for j in range(self.stripCount()):
+            start = self.offset[j]
+            end = start + self.byteCounts[j]
+            self.buf[start:end] = self.data[j]
+
 class DNG(object):
     def __init__(self):
         self.IFDs = []
@@ -431,15 +478,18 @@ class DNG(object):
             ifd.setBuffer(buf, currentOffset)
             currentOffset += ifd.dataLen()
 
-    def dataLen(self):
+        for strip in self.ImageDataStrips:
+            assert isinstance(strip, dngStrip)
+            strip.setBuffer(buf, currentOffset, self.IFDs)
+            currentOffset += strip.dataLen()
+
+    def dataLen(self, ifd_only=False):
         totalLength = 8
         for ifd in self.IFDs:
             totalLength += (ifd.dataLen() + 3) & 0xFFFFFFFC
 
-        for i in range(len(self.ImageDataStrips)):
-            self.StripOffsets[i] = totalLength
-            strip = self.ImageDataStrips[i]
-            totalLength += (len(strip) + 3) & 0xFFFFFFFC
+        for strip in self.ImageDataStrips:
+            totalLength += (strip.dataLen() + 3) & 0xFFFFFFFC
 
         return (totalLength + 3) & 0xFFFFFFFC
 
@@ -449,5 +499,5 @@ class DNG(object):
         for ifd in self.IFDs:
             ifd.write()
 
-        for i in range(len(self.ImageDataStrips)):
-            self.buf[self.StripOffsets[i]:self.StripOffsets[i] + len(self.ImageDataStrips[i])] = self.ImageDataStrips[i]
+        for strip in self.ImageDataStrips:
+            strip.write()

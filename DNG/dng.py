@@ -1,4 +1,4 @@
-from utils import Type, Tag, dngHeader, dngIFD, dngTag, DNG, tagId2tagType
+from utils import Type, Tag, dngHeader, dngIFD, dngTag, dngStrip, DNG, tagId2tagType
 from isp.pipeline_utils import get_metadata, get_image_ifds, get_image_tags
 from isp.exif_utils import Ifd, Tag
 from isp.exif_data_formats import exif_formats
@@ -21,20 +21,21 @@ exiftype2dngTagtype = {
     12: Type.Double
 }
 
-
 class smv_dng(object):
     def __init__(self, path):
         # read dng headers
         self.endian, self.IFDoffsets = self.read_header(path)
+        self.IFDStrips = {}
 
         # load IFDs
-        self.IFDs = get_image_ifds(path)
-        print(self.IFDs.keys())
+        self.IFDs = get_image_ifds(path, verbose=False)
         self.mainIFD = self.Ifd2dngIFD(self.IFDs[self.IFDoffsets[0]])
+
+        # load data Stripes
+        self.load_strips(path)
 
     def read_header(self, path):
         with open(path, 'rb') as binary:
-
             # Read endian
             binary.seek(0)
             b0 = binary.read(1)
@@ -43,9 +44,7 @@ class smv_dng(object):
             # +1: b'M' (big-endian/Motorola)
             # -1: b'I' (little-endian/Intel)
             # endian = 1 if b0 == b'M' else -1
-            # print("Endian = {}".format(b0))
             endian_sign = "<" if b0 == b'I' else ">"  # used in struct.unpack
-            # print("Endian sign = {}".format(endian_sign))
 
             # Version
             _ = binary.read(2)  # 0x002A
@@ -56,7 +55,16 @@ class smv_dng(object):
 
         return endian_sign, ifd_offsets
 
-    def Tag2dngTag(self, tag: Tag):
+    def load_strips(self, path):
+        with open(path, 'rb') as binary:
+            for key, val in self.IFDStrips.items():
+                assert isinstance(val, dngStrip)
+                # load strip
+                for i in range(val.stripCount()):
+                    binary.seek(val.offset[i])
+                    val.data.append(binary.read(val.byteCounts[i]))
+
+    def Tag2dngTag(self, tag: Tag, ifd):
         try:
             dtype = exiftype2dngTagtype[tag.data_format]
             if tag.tag_num == 330 or tag.tag_num == 34665:
@@ -83,20 +91,38 @@ class smv_dng(object):
             for i in range(len(subIFD_ids)):
                 offset = subIFD_ids[i]
                 dngtag.subIFD.append(self.Ifd2dngIFD(self.IFDs[offset]))
+
+        if tag.tag_num == 273 or tag.tag_num == 278 or tag.tag_num == 279:
+            if tag.tag_num == 273:
+                strip = dngStrip(ifd.offset, tag.values)
+            else:
+                strip = self.IFDStrips[ifd.offset]
+            if tag.tag_num == 278:
+                strip.rowPerStrip = tag.values[0]
+            if tag.tag_num == 279:
+                strip.byteCounts = tag.values
+
+            self.IFDStrips[ifd.offset] = strip
         return dngtag
 
     def Ifd2dngIFD(self, ifd: Ifd):
         IFD = dngIFD()
 
-        for tagID, tag in ifd.tags.items():
-            dngtag = self.Tag2dngTag(tag)
+        for tagID, tag in sorted(ifd.tags.items(), key=lambda x: x[0]):
+            dngtag = self.Tag2dngTag(tag, ifd)
             IFD.tags.append(dngtag)
         return IFD
 
     def write(self, path):
         dngTemplate = DNG()
         with open(path, 'wb') as binary:
+            # load IFD
             dngTemplate.IFDs.append(self.mainIFD)
+
+            # load Strips
+            for key, val in self.IFDStrips.items():
+                dngTemplate.ImageDataStrips.append(val)
+
             totalLength = dngTemplate.dataLen()
             buf = bytearray(totalLength)
             dngTemplate.setBuffer(buf)
@@ -105,7 +131,7 @@ class smv_dng(object):
 
 
 if __name__ == '__main__':
-    dng_path = '../extras/IMG_4155.dng'
+    dng_path = '../extras/custom.dng'
     # dng_path = '../extras/IMG_4155_dummy.dng'
     my_dng = smv_dng(dng_path)
-    my_dng.write('../extras/IMG_4155_dummy.dng')
+    my_dng.write('../extras/custom_dummy.dng')
