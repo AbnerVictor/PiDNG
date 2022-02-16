@@ -320,7 +320,6 @@ class dngTag(object):
             self.DataCount += 1
         elif self.DataType == Type.IFD:
             self.Value = struct.pack('<%sL' % len(value), *value)
-            self.subIFD = []
         self.Value += str.encode('\x00' * (((len(self.Value) + 3) & 0xFFFFFFFC) - len(self.Value)))
 
         self.DataLength = len(self.Value)
@@ -354,8 +353,6 @@ class dngTag(object):
         if self.subIFD is not None:
             for ifd in self.subIFD:
                 datalen += ifd.dataLen()
-            print(self.TagId, datalen)
-            input('s')
         return datalen
 
     def write(self):
