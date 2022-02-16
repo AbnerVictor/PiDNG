@@ -1,4 +1,4 @@
-from pidng.dng import Type, Tag, dngHeader, dngIFD, dngTag, DNG, tagId2tagType
+from utils import Type, Tag, dngHeader, dngIFD, dngTag, DNG, tagId2tagType
 from isp.pipeline_utils import get_metadata, get_image_ifds, get_image_tags
 from isp.exif_utils import Ifd, Tag
 from isp.exif_data_formats import exif_formats
@@ -24,8 +24,13 @@ exiftype2dngTagtype = {
 
 class smv_dng(object):
     def __init__(self, path):
-        self.endian, self.mainIFDoffset = self.read_header(path)
+        # read dng headers
+        self.endian, self.IFDoffsets = self.read_header(path)
+
+        # load IFDs
         self.IFDs = get_image_ifds(path)
+        print(self.IFDs.keys())
+        self.mainIFD = self.Ifd2dngIFD(self.IFDs[self.IFDoffsets[0]])
 
     def read_header(self, path):
         with open(path, 'rb') as binary:
@@ -47,50 +52,9 @@ class smv_dng(object):
 
             # offset to first IFD
             b4_7 = binary.read(4)  # offset to first IFD
-            ifd_offset = struct.unpack(endian_sign + "I", b4_7)[0]
+            ifd_offsets = struct.unpack(endian_sign + "I", b4_7)
 
-        return endian_sign, ifd_offset
-
-    def __load_main_ifd__(self, path=None):
-        mainIFD = dngIFD()
-
-        # load main IFD
-        with open(path, 'rb') as f:
-            tags = exifread.process_file(f)
-
-            for key, val in tags.items():
-                assert isinstance(val, exifread.classes.IfdTag)
-
-                # convert exifread tags to PiDNG tags
-                tag = val.tag
-                value = val.values
-                try:
-                    type = tagId2tagType(tag)
-                except Exception as e:
-                    continue
-                datatype = type[1]
-
-                # Ratio to list items
-                if datatype == Type.Srational or datatype == Type.Rational:
-                    ratio_list = []
-                    for i in value:
-                        if isinstance(i, exifread.utils.Ratio):
-                            ratio_list.append([i.numerator, i.denominator])
-                    value = ratio_list
-                if datatype == Type.Float or datatype == Type.Double:
-                    float_list = []
-                    for i in value:
-                        if isinstance(i, tuple):
-                            float_list.append(i[0])
-                    value = float_list
-
-                TAG = dngTag(tagId2tagType(tag), value)
-
-                # print(tag, datatype, value, TAG.selfContained, TAG.subIFD)
-
-                mainIFD.tags.append(TAG)
-
-        return mainIFD
+        return endian_sign, ifd_offsets
 
     def Tag2dngTag(self, tag: Tag):
         try:
@@ -115,27 +79,27 @@ class smv_dng(object):
 
         if dngtag.DataType == Type.IFD:
             subIFD_ids = tag.values
-            dngtag.subIFDs = []
-            for id in subIFD_ids:
-                dngtag.subIFDs.append(self.Ifd2dngIFD(self.IFDs[id]))
+            dngtag.subIFD = []
+            for i in range(len(subIFD_ids)):
+                offset = subIFD_ids[i]
+                dngtag.subIFD.append(self.Ifd2dngIFD(self.IFDs[offset]))
         return dngtag
 
     def Ifd2dngIFD(self, ifd: Ifd):
         IFD = dngIFD()
-        IFD.offset = ifd.offset
-        print(IFD.offset)
 
         for tagID, tag in ifd.tags.items():
             dngtag = self.Tag2dngTag(tag)
             IFD.tags.append(dngtag)
         return IFD
 
-    def write(self):
+    def write(self, path):
         dngTemplate = DNG()
-        mainIFD = self.Ifd2dngIFD(self.IFDs[8])
+        with open(path, 'w+') as binary:
+            self.mainIFD.setBuffer(binary, self.IFDoffsets[0])
 
 
 if __name__ == '__main__':
     dng_path = '../extras/IMG_4155.dng'
     my_dng = smv_dng(dng_path)
-    my_dng.write()
+    my_dng.write('../extras/IMG_4155_dummy.dng')
