@@ -1,0 +1,263 @@
+Endian = b'I'
+Endian sign = <
+=========== Parsing IFD # 0 ===========
+IFD offset = 8
+Number of entries = 30
+---------- Tag 1 / 30 ----------
+Tag offset = 10
+Tag number = 254 = 0x00fe
+Data format = 4 = unsigned long
+Number of values = 1
+Total bytes = 4
+Tag values = [0]
+---------- Tag 2 / 30 ----------
+Tag offset = 22
+Tag number = 256 = 0x0100
+Data format = 4 = unsigned long
+Number of values = 1
+Total bytes = 4
+Tag values = [960]
+---------- Tag 3 / 30 ----------
+Tag offset = 34
+Tag number = 257 = 0x0101
+Data format = 4 = unsigned long
+Number of values = 1
+Total bytes = 4
+Tag values = [540]
+---------- Tag 4 / 30 ----------
+Tag offset = 46
+Tag number = 258 = 0x0102
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [16]
+---------- Tag 5 / 30 ----------
+Tag offset = 58
+Tag number = 259 = 0x0103
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [1]
+---------- Tag 6 / 30 ----------
+Tag offset = 70
+Tag number = 262 = 0x0106
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [32803]
+---------- Tag 7 / 30 ----------
+Tag offset = 82
+Tag number = 271 = 0x010f
+Data format = 2 = ascii string
+Number of values = 6
+Total bytes = 6
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 94
+Seeking to data offset = 374
+Tag values = [b'C', b'a', b'n', b'o', b'n', b'\x00']
+Tag values (string) = Canon 
+Seeking back to current offset = 94
+---------- Tag 8 / 30 ----------
+Tag offset = 94
+Tag number = 272 = 0x0110
+Data format = 2 = ascii string
+Number of values = 13
+Total bytes = 13
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 106
+Seeking to data offset = 382
+Tag values = [b'C', b'a', b'n', b'o', b'n', b' ', b'E', b'O', b'S', b' ', b'6', b'D', b'\x00']
+Tag values (string) = Canon EOS 6D 
+Seeking back to current offset = 106
+---------- Tag 9 / 30 ----------
+Tag offset = 106
+Tag number = 274 = 0x0112
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [1]
+---------- Tag 10 / 30 ----------
+Tag offset = 118
+Tag number = 277 = 0x0115
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [1]
+---------- Tag 11 / 30 ----------
+Tag offset = 130
+Tag number = 305 = 0x0131
+Data format = 2 = ascii string
+Number of values = 12
+Total bytes = 12
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 142
+Seeking to data offset = 398
+Tag values = [b'M', b'l', b'R', b'a', b'w', b'V', b'i', b'e', b'w', b'e', b'r', b'\x00']
+Tag values (string) = MlRawViewer 
+Seeking back to current offset = 142
+---------- Tag 12 / 30 ----------
+Tag offset = 142
+Tag number = 306 = 0x0132
+Data format = 2 = ascii string
+Number of values = 20
+Total bytes = 20
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 154
+Seeking to data offset = 410
+Tag values = [b'2', b'0', b'1', b'9', b':', b'0', b'6', b':', b'0', b'3', b' ', b'1', b'3', b':', b'1', b'8', b':', b'5', b'1', b'\x00']
+Tag values (string) = 2019:06:03 13:18:51 
+Seeking back to current offset = 154
+---------- Tag 13 / 30 ----------
+Tag offset = 154
+Tag number = 322 = 0x0142
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [960]
+---------- Tag 14 / 30 ----------
+Tag offset = 166
+Tag number = 323 = 0x0143
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [540]
+---------- Tag 15 / 30 ----------
+Tag offset = 178
+Tag number = 324 = 0x0144
+Data format = 4 = unsigned long
+Number of values = 1
+Total bytes = 4
+Tag values = [568]
+---------- Tag 16 / 30 ----------
+Tag offset = 190
+Tag number = 325 = 0x0145
+Data format = 4 = unsigned long
+Number of values = 1
+Total bytes = 4
+Tag values = [1036800]
+---------- Tag 17 / 30 ----------
+Tag offset = 202
+Tag number = 33421 = 0x828d
+Data format = 3 = unsigned short
+Number of values = 2
+Total bytes = 4
+Tag values = [2, 2]
+---------- Tag 18 / 30 ----------
+Tag offset = 214
+Tag number = 33422 = 0x828e
+Data format = 1 = unsigned byte
+Number of values = 4
+Total bytes = 4
+Tag values = [0, 1, 1, 2]
+---------- Tag 19 / 30 ----------
+Tag offset = 226
+Tag number = 33434 = 0x829a
+Data format = 5 = unsigned rational
+Number of values = 1
+Total bytes = 8
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 238
+Seeking to data offset = 430
+Tag values = [Fraction(629, 250000)]
+Seeking back to current offset = 238
+---------- Tag 20 / 30 ----------
+Tag offset = 238
+Tag number = 34855 = 0x8827
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [235]
+---------- Tag 21 / 30 ----------
+Tag offset = 250
+Tag number = 37377 = 0x9201
+Data format = 10 = signed rational
+Number of values = 1
+Total bytes = 8
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 262
+Seeking to data offset = 438
+Tag values = [Fraction(8841, 1024)]
+Seeking back to current offset = 262
+---------- Tag 22 / 30 ----------
+Tag offset = 262
+Tag number = 37386 = 0x920a
+Data format = 5 = unsigned rational
+Number of values = 1
+Total bytes = 8
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 274
+Seeking to data offset = 446
+Tag values = [Fraction(33, 1)]
+Seeking back to current offset = 274
+---------- Tag 23 / 30 ----------
+Tag offset = 274
+Tag number = 41989 = 0xa405
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [33]
+---------- Tag 24 / 30 ----------
+Tag offset = 286
+Tag number = 50706 = 0xc612
+Data format = 1 = unsigned byte
+Number of values = 4
+Total bytes = 4
+Tag values = [1, 4, 0, 0]
+---------- Tag 25 / 30 ----------
+Tag offset = 298
+Tag number = 50707 = 0xc613
+Data format = 1 = unsigned byte
+Number of values = 4
+Total bytes = 4
+Tag values = [1, 2, 0, 0]
+---------- Tag 26 / 30 ----------
+Tag offset = 310
+Tag number = 50708 = 0xc614
+Data format = 2 = ascii string
+Number of values = 13
+Total bytes = 13
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 322
+Seeking to data offset = 454
+Tag values = [b'C', b'a', b'n', b'o', b'n', b' ', b'E', b'O', b'S', b' ', b'6', b'D', b'\x00']
+Tag values (string) = Canon EOS 6D 
+Seeking back to current offset = 322
+---------- Tag 27 / 30 ----------
+Tag offset = 322
+Tag number = 50714 = 0xc61a
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [2047]
+---------- Tag 28 / 30 ----------
+Tag offset = 334
+Tag number = 50717 = 0xc61d
+Data format = 3 = unsigned short
+Number of values = 1
+Total bytes = 2
+Tag values = [16200]
+---------- Tag 29 / 30 ----------
+Tag offset = 346
+Tag number = 50721 = 0xc621
+Data format = 10 = signed rational
+Number of values = 9
+Total bytes = 72
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 358
+Seeking to data offset = 470
+Tag values = [Fraction(3517, 5000), Fraction(-803, 10000), Fraction(-507, 5000), Fraction(-221, 500), Fraction(12563, 10000), Fraction(2057, 10000), Fraction(-851, 10000), Fraction(1993, 10000), Fraction(2879, 5000)]
+Seeking back to current offset = 358
+---------- Tag 30 / 30 ----------
+Tag offset = 358
+Tag number = 50728 = 0xc628
+Data format = 5 = unsigned rational
+Number of values = 3
+Total bytes = 24
+Total bytes > 4; The next 4 bytes are an offset.
+Current offset = 370
+Seeking to data offset = 542
+Tag values = [Fraction(1, 2), Fraction(1, 1), Fraction(333333, 500000)]
+Seeking back to current offset = 370
+=========== Finished parsing IFD # 0, Offset to next IFD: 0 ===========
+{8: <DNG.utils.dngTile object at 0x0000023EDB473700>}
+[960] [540] [1036800]
