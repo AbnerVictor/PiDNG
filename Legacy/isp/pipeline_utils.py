@@ -561,7 +561,7 @@ def apply_degamma(x):
     return x ** (2.2)
 
 def init_tone_map():
-    curve = cv2.imread('./tone_curve.png')
+    curve = cv2.imread('tone_curve.png')
     result = np.zeros(1454)
     for y in range(1454):
         length = 0
@@ -601,7 +601,7 @@ def acesfilm(x, adapted_lum=1.):
 
 
 def apply_tone_map(x, tone_fn):
-    tone_curve = loadmat('./tone_curve.mat')
+    tone_curve = loadmat('tone_curve.mat')
     tone_curve = tone_curve['tc']
     x = np.round(x * (len(tone_curve) - 1)).astype(int)
     tone_mapped_image = np.squeeze(tone_curve[x])

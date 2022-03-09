@@ -1,5 +1,7 @@
 # dependencies
 devops-smv-smv_isp_yyitong-yyt_dev
+Legacy
+*.npy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

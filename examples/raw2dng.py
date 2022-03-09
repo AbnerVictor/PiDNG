@@ -1,4 +1,4 @@
-from pidng.core import RAW2DNG, DNGTags, Tag
+from Legacy.pidng.core import RAW2DNG, DNGTags, Tag
 import numpy as np
 import struct
 

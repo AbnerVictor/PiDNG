@@ -4,7 +4,7 @@ import sys
 import imageio
 import imageio_ffmpeg
 import numpy as np
-dirs = os.listdir('./')[3:]
+dirs = os.listdir('/')[3:]
 for dir in dirs:
     dir = './' + dir
     files = glob.glob(dir + '/*.mov')[1:]

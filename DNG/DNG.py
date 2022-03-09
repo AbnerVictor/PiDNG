@@ -1,9 +1,5 @@
-from utils import Type, Tag, dngHeader, dngIFD, dngTag, dngStrip, dngTile, DNG
-from isp.pipeline_utils import get_metadata, get_image_ifds, get_image_tags
-from isp.exif_utils import Ifd, Tag
-from isp.exif_data_formats import exif_formats
-import exifread
-from exifread.tags import FIELD_TYPES, EXIF_TAGS
+from DNG.utils import Type, Tag, dngHeader, dngIFD, dngTag, dngStrip, dngTile, DNG
+from DNG.exif_utils import Ifd, Tag, parse_exif
 import struct
 
 exiftype2dngTagtype = {
@@ -21,16 +17,20 @@ exiftype2dngTagtype = {
     12: Type.Double
 }
 
+def get_image_ifds(image_path, verbose=False):
+    ifds = parse_exif(image_path, verbose=verbose)
+    return ifds
+
 
 class smv_dng(object):
-    def __init__(self, path):
+    def __init__(self, path, verbose=False):
         # read dng headers
         self.endian, self.IFDoffsets = self.read_header(path)
         self.IFDStrips = {}
         self.IFDTiles = {}
 
         # load IFDs
-        self.IFDs = get_image_ifds(path, verbose=True)
+        self.IFDs = get_image_ifds(path, verbose=verbose)
         self.mainIFD = self.Ifd2dngIFD(self.IFDs[self.IFDoffsets[0]])
 
         # load data Stripes
@@ -176,7 +176,8 @@ class smv_dng(object):
 
 
 if __name__ == '__main__':
-    dng_path = '../extras/IMG_4155.dng'
+    # dng_path = '../extras/IMG_4155.dng'
     # dng_path = '../extras/IMG_4155_dummy.dng'
+    dng_path = '../extras/raw_deblur/M03-1318_000065.dng'
     my_dng = smv_dng(dng_path)
-    my_dng.write('../extras/IMG_4155_dummy.dng')
+    my_dng.write('../extras/raw_deblur/M03-1318_000065_dummy.dng')

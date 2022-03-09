@@ -1,4 +1,4 @@
-from pidng.core import RPICAM2DNG
+from Legacy.pidng.core import RPICAM2DNG
 
 
 def processing(raw, _dummy):
