@@ -25,6 +25,7 @@ if __name__ == '__main__':
     tile = my_dng.IFDTiles[8]
     assert isinstance(tile, dngTile)
     print(tile.tileWidth, tile.tileLength, tile.byteCounts)
+
     # 16bits 图像
     raw_data = np.frombuffer(tile.data[0], dtype=np.uint16)
     raw_data = raw_data.reshape(tile.tileLength[0], tile.tileWidth[0])
@@ -33,11 +34,10 @@ if __name__ == '__main__':
     plt.title('raw')
     plt.imshow(raw_data, cmap='gray')
 
+    # 替换数据
     data = data.flatten().astype(np.uint16)
     print(data.shape)
-
     data = data.tobytes()
-
     tile.data = [data]
     my_dng.IFDTiles[8] = tile
 
