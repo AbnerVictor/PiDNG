@@ -147,128 +147,6 @@ class Tag:
     NewRawImageDigest = (51111, Type.Byte)
 
 
-Id2Type = {0: Type.Invalid,
-           254: Type.Long,
-           256: Type.Long,
-           257: Type.Long,
-           258: Type.Short,
-           259: Type.Short,
-           262: Type.Short,
-           266: Type.Short,
-           270: Type.Ascii,
-           271: Type.Ascii,
-           272: Type.Ascii,
-           273: Type.Long,
-           274: Type.Short,
-           277: Type.Short,
-           278: Type.Short,
-           279: Type.Long,
-           282: Type.Rational,
-           283: Type.Rational,
-           284: Type.Short,
-           296: Type.Short,
-           305: Type.Ascii,
-           306: Type.Ascii,
-           315: Type.Ascii,
-           317: Type.Short,
-           322: Type.Short,
-           323: Type.Short,
-           324: Type.Long,
-           325: Type.Long,
-           330: Type.IFD,
-           700: Type.Undefined,
-           33421: Type.Short,
-           33422: Type.Byte,
-           33432: Type.Ascii,
-           33434: Type.Rational,
-           33437: Type.Rational,
-           34665: Type.IFD,
-           34850: Type.Short,
-           34855: Type.Short,
-           34864: Type.Short,
-           36864: Type.Undefined,
-           36867: Type.Ascii,
-           37377: Type.Srational,
-           37378: Type.Rational,
-           37380: Type.Srational,
-           37381: Type.Rational,
-           37382: Type.Rational,
-           37383: Type.Short,
-           37385: Type.Short,
-           37386: Type.Rational,
-           37398: Type.Byte,
-           37520: Type.Ascii,
-           37521: Type.Ascii,
-           41486: Type.Rational,
-           41487: Type.Rational,
-           41488: Type.Short,
-           41989: Type.Short,
-           42033: Type.Ascii,
-           42036: Type.Ascii,
-           50706: Type.Byte,
-           50707: Type.Byte,
-           50708: Type.Ascii,
-           50710: Type.Byte,
-           50711: Type.Short,
-           50712: Type.Short,
-           50713: Type.Short,
-           50714: Type.Short,
-           50717: Type.Short,
-           50718: Type.Rational,
-           50719: Type.Long,
-           50720: Type.Long,
-           50721: Type.Srational,
-           50722: Type.Srational,
-           50723: Type.Srational,
-           50724: Type.Srational,
-           50727: Type.Rational,
-           50728: Type.Rational,
-           50730: Type.Srational,
-           50731: Type.Rational,
-           50732: Type.Rational,
-           50733: Type.Long,
-           50734: Type.Rational,
-           50735: Type.Ascii,
-           50738: Type.Rational,
-           50739: Type.Rational,
-           50740: Type.Byte,
-           50741: Type.Short,
-           50778: Type.Short,
-           50779: Type.Short,
-           50780: Type.Rational,
-           50781: Type.Byte,
-           50829: Type.Long,
-           50931: Type.Ascii,
-           50932: Type.Ascii,
-           50935: Type.Rational,
-           50936: Type.Ascii,
-           50937: Type.Long,
-           50938: Type.Float,
-           50939: Type.Float,
-           50940: Type.Float,
-           50941: Type.Long,
-           50964: Type.Srational,
-           50965: Type.Srational,
-           50966: Type.Ascii,
-           50967: Type.Ascii,
-           50969: Type.Byte,
-           50970: Type.Long,
-           50971: Type.Ascii,
-           51041: Type.Double,
-           51043: Type.Byte,
-           51044: Type.Srational,
-           51008: Type.Undefined,
-           51009: Type.Undefined,
-           51081: Type.Ascii,
-           51109: Type.Srational,  # 1.4 Spec says rational but mentions negative values?
-           51110: Type.Long,
-           51111: Type.Byte}
-
-
-def tagId2tagType(tagId):
-    return (tagId, Id2Type[tagId])
-
-
 class dngHeader(object):
     def __init__(self):
         self.IFDOffset = 8
@@ -434,7 +312,7 @@ class dngStrip(object):
 
         # update strip offset
         ori_offsets = self.offset
-        self.offset = [offset + self.byteCounts[i] for i in range(self.stripCount())]
+        self.offset = [offset + sum(self.byteCounts[:i]) for i in range(self.stripCount())]
 
         # update tag 273
         def traverseIFD(ifd):
@@ -463,11 +341,64 @@ class dngStrip(object):
             end = start + self.byteCounts[j]
             self.buf[start:end] = self.data[j]
 
+
+class dngTile(object):
+    def __init__(self, ifdOffset):
+        self.ifdOffset = ifdOffset
+        self.offset = []
+        self.tileWidth = []
+        self.tileLength = []
+        self.byteCounts = []
+        self.data = []
+
+    def tileCount(self):
+        return len(self.offset)
+
+    def dataLen(self):
+        return sum(self.byteCounts)
+
+    def setBuffer(self, buf, offset, IFDs):
+        self.buf = buf
+
+        # update tile offset
+        ori_offsets = self.offset
+        self.offset = [offset + sum(self.byteCounts[:i]) for i in range(self.tileCount())]
+
+        # update tag 324
+        def traverseIFD(ifd):
+            assert isinstance(ifd, dngIFD)
+            for tag in ifd.tags:
+                assert isinstance(tag, dngTag)
+                if tag.TagId == Tag.TileOffsets[0]:
+                    targetTag = copy.deepcopy(tag)
+                    targetTag.setValue(ori_offsets)
+                    if targetTag.Value == tag.Value:
+                        tag.setValue(self.offset)
+                        break
+                elif tag.subIFD:
+                    for ifd in tag.subIFD:
+                        traverseIFD(ifd)
+
+        for ifd in IFDs:
+            traverseIFD(ifd)
+
+    def write(self):
+        if not self.buf:
+            raise RuntimeError("buffer not initialized")
+
+        for j in range(self.tileCount()):
+            start = self.offset[j]
+            end = start + self.byteCounts[j]
+            self.buf[start:end] = self.data[j]
+
+
+
 class DNG(object):
     def __init__(self):
         self.IFDs = []
         self.ImageDataStrips = []
-        self.StripOffsets = {}
+        self.ImageTiles = []
+        # self.StripOffsets = {}
 
     def setBuffer(self, buf):
         self.buf = buf
@@ -483,6 +414,11 @@ class DNG(object):
             strip.setBuffer(buf, currentOffset, self.IFDs)
             currentOffset += strip.dataLen()
 
+        for tile in self.ImageTiles:
+            assert isinstance(tile, dngTile)
+            tile.setBuffer(buf, currentOffset, self.IFDs)
+            currentOffset += tile.dataLen()
+
     def dataLen(self, ifd_only=False):
         totalLength = 8
         for ifd in self.IFDs:
@@ -490,6 +426,9 @@ class DNG(object):
 
         for strip in self.ImageDataStrips:
             totalLength += (strip.dataLen() + 3) & 0xFFFFFFFC
+
+        for tile in self.ImageTiles:
+            totalLength += (tile.dataLen() + 3) & 0xFFFFFFFC
 
         return (totalLength + 3) & 0xFFFFFFFC
 
@@ -501,3 +440,6 @@ class DNG(object):
 
         for strip in self.ImageDataStrips:
             strip.write()
+
+        for tile in self.ImageTiles:
+            tile.write()

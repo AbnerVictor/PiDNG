@@ -1,4 +1,4 @@
-from utils import Type, Tag, dngHeader, dngIFD, dngTag, dngStrip, DNG, tagId2tagType
+from utils import Type, Tag, dngHeader, dngIFD, dngTag, dngStrip, dngTile, DNG
 from isp.pipeline_utils import get_metadata, get_image_ifds, get_image_tags
 from isp.exif_utils import Ifd, Tag
 from isp.exif_data_formats import exif_formats
@@ -21,6 +21,7 @@ exiftype2dngTagtype = {
     12: Type.Double
 }
 
+
 class smv_dng(object):
     def __init__(self, path):
         # read dng headers
@@ -29,13 +30,14 @@ class smv_dng(object):
         self.IFDTiles = {}
 
         # load IFDs
-        self.IFDs = get_image_ifds(path, verbose=False)
+        self.IFDs = get_image_ifds(path, verbose=True)
         self.mainIFD = self.Ifd2dngIFD(self.IFDs[self.IFDoffsets[0]])
 
         # load data Stripes
         self.load_strips(path)
 
-        # TODO load tiles
+        # load data Tiles
+        self.load_tiles(path)
 
     def read_header(self, path):
         with open(path, 'rb') as binary:
@@ -67,7 +69,16 @@ class smv_dng(object):
                     binary.seek(val.offset[i])
                     val.data.append(binary.read(val.byteCounts[i]))
 
-    def Tag2dngTag(self, tag: Tag, ifd):
+    def load_tiles(self, path):
+        with open(path, 'rb') as binary:
+            for key, val in self.IFDTiles.items():
+                assert isinstance(val, dngTile)
+                # load strip
+                for i in range(val.tileCount()):
+                    binary.seek(val.offset[i])
+                    val.data.append(binary.read(val.byteCounts[i]))
+
+    def Tag2dngTag(self, tag: Tag, ifd: Ifd):
         try:
             dtype = exiftype2dngTagtype[tag.data_format]
             if tag.tag_num == 330 or tag.tag_num == 34665:
@@ -78,7 +89,7 @@ class smv_dng(object):
         value = tag.values
 
         if dtype == Type.Ascii:
-            value = b''.join(tag.values).decode()
+            value = b''.join(tag.values).decode().strip(b'\x00'.decode())
         if dtype == Type.Rational or dtype == Type.Srational:
             value = []
             for i in tag.values:
@@ -88,6 +99,7 @@ class smv_dng(object):
 
         dngtag.TagOffset = tag.offset
 
+        # load subIFDs
         if tag.tag_num == 330 or tag.tag_num == 34665:
             subIFD_ids = tag.values
             dngtag.subIFD = []
@@ -95,17 +107,43 @@ class smv_dng(object):
                 offset = subIFD_ids[i]
                 dngtag.subIFD.append(self.Ifd2dngIFD(self.IFDs[offset]))
 
+        # load strips
         if tag.tag_num == 273 or tag.tag_num == 278 or tag.tag_num == 279:
             if tag.tag_num == 273:
+                # StripOffsets
                 strip = dngStrip(ifd.offset, tag.values)
             else:
                 strip = self.IFDStrips[ifd.offset]
             if tag.tag_num == 278:
+                # RowsPerStrip
                 strip.rowPerStrip = tag.values[0]
             if tag.tag_num == 279:
+                # StripByteCounts
                 strip.byteCounts = tag.values
 
             self.IFDStrips[ifd.offset] = strip
+
+        # load Tiles
+        if tag.tag_num == 322 or tag.tag_num == 323 \
+            or tag.tag_num == 324 or tag.tag_num == 325:
+            if ifd.offset not in self.IFDTiles.keys():
+                tile = dngTile(ifd.offset)
+            else:
+                tile = self.IFDTiles[ifd.offset]
+            if tag.tag_num == 322:
+                # TileWidth
+                tile.tileWidth = tag.values
+            if tag.tag_num == 323:
+                # TileLength
+                tile.tileLength = tag.values
+            if tag.tag_num == 324:
+                # TileOffsets
+                tile.offset = tag.values
+            if tag.tag_num == 325:
+                # TileByteCounts
+                tile.byteCounts = tag.values
+                pass
+            self.IFDTiles[ifd.offset] = tile
         return dngtag
 
     def Ifd2dngIFD(self, ifd: Ifd):
@@ -125,6 +163,10 @@ class smv_dng(object):
             # load Strips
             for key, val in self.IFDStrips.items():
                 dngTemplate.ImageDataStrips.append(val)
+
+            # load Tiles
+            for key, val in self.IFDTiles.items():
+                dngTemplate.ImageTiles.append(val)
 
             totalLength = dngTemplate.dataLen()
             buf = bytearray(totalLength)
