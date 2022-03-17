@@ -1,4 +1,4 @@
-from DNG.DNG import smv_dng
+from DNG.dng import smv_dng
 from DNG.utils import dngTile
 import numpy as np
 import matplotlib.pyplot as plt
