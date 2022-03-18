@@ -122,6 +122,11 @@ def write_tile(data, tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, 
     except Exception as e:
         raise Exception(f'Load tiles failed {e}, compression type: {compression}')
 
+def get_dtype(bitspersample):
+    if bitspersample == 16:
+        return np.uint16
+    if bitspersample == 8:
+        return np.uint8
 
 class DNGEditor(object):
     def __init__(self, DNG: smv_dng):
@@ -160,17 +165,18 @@ class DNGEditor(object):
 
         # load IFD param
         self.CFA_IFD = CFA_IFD
-        self.logger.debug(f'Load CFA_IFD, IFD offset: {CFA_IFD.ori_offset}')
+        self.logger.debug(f'Load CFA_IFD, IFD offset: {self.CFA_IFD.ori_offset}')
 
-        Compression = get_int_tag_value(ifd=CFA_IFD, tag_id=Tag.Compression, endian=self.endian)[0]
-        ImageWidth = get_int_tag_value(ifd=CFA_IFD, tag_id=Tag.ImageWidth, endian=self.endian)[0]
-        ImageLength = get_int_tag_value(ifd=CFA_IFD, tag_id=Tag.ImageLength, endian=self.endian)[0]
+        Compression = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.Compression, endian=self.endian)[0]
+        ImageWidth = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ImageWidth, endian=self.endian)[0]
+        ImageLength = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ImageLength, endian=self.endian)[0]
+        BitsPerSample = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.BitsPerSample, endian=self.endian)[0]
 
         # load Tile param
-        ActiveArea = get_int_tag_value(ifd=CFA_IFD, tag_id=Tag.ActiveArea, endian=self.endian)
+        ActiveArea = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ActiveArea, endian=self.endian)
 
         tile_data = load_tile(self.dng.IFDTiles[CFA_IFD.ori_offset], ImageWidth, ImageLength, Compression,
-                              dtype=np.uint16)
+                              dtype=get_dtype(BitsPerSample))
 
         if ActiveArea is not None:
             active_tile = tile_data[ActiveArea[0]:ActiveArea[2], ActiveArea[1]:ActiveArea[3]]
@@ -190,12 +196,13 @@ class DNGEditor(object):
         Compression = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.Compression, endian=self.endian)[0]
         ImageWidth = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ImageWidth, endian=self.endian)[0]
         ImageLength = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ImageLength, endian=self.endian)[0]
+        BitsPerSample = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.BitsPerSample, endian=self.endian)[0]
 
         # load Tile param
         ActiveArea = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ActiveArea, endian=self.endian)
 
         tile_data = load_tile(self.dng.IFDTiles[self.CFA_IFD.ori_offset], ImageWidth, ImageLength, Compression,
-                              dtype=np.uint16)
+                              dtype=get_dtype(BitsPerSample))
 
         if ActiveArea is not None:
             assert data.shape == tile_data[ActiveArea[0]:ActiveArea[2], ActiveArea[1]:ActiveArea[3]].shape
@@ -208,7 +215,7 @@ class DNGEditor(object):
         # Set compression
         set_tag_value([compression], self.CFA_IFD, Tag.Compression)
         self.dng.IFDTiles[self.CFA_IFD.ori_offset] = write_tile(tile_data, self.dng.IFDTiles[self.CFA_IFD.ori_offset],
-                                                                ImageWidth, ImageLength, compression, dtype=np.uint16)
+                                                                ImageWidth, ImageLength, compression, dtype=self.CFA_IFD)
         self.logger.debug(f'Overwrite IFDTile: {self.CFA_IFD.ori_offset}')
 
         # Overwrite CFA_IFD
