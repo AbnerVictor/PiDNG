@@ -31,19 +31,49 @@ Write DNG file
 my_dng.write('new_dummy.dng')
 ```
 
-## Decode and Encode
+## Editing DNG
 
-原本的DNG里面的CFA提取出来 -> 处理 -> 替换回去
-算法处理输出的结果 -> 原本的数据结构是相同的
+```python
+from DNG.Editor import DNGEditor
+from DNG.dng import smv_dng
+import logging
 
-统一输入输出规范
-- 是否压缩
-- 需要什么数据
-  - raw -> RGBG array (4-chan) -> network -> RGBG array (4-chan)
-- 格式
+import os
+import matplotlib.pyplot as plt
 
-TODO:
+logging.basicConfig(level=logging.INFO)
 
-- read CFA (checked)
-- crop CFA (tbd)
-- write CFA (compression tbd)
+root = r'C:\Users\abner.yang\Downloads\raw_4097'
+name = 'DSC_2849'
+
+# input dng path
+raw_pth = os.path.join(root, name + '.dng')
+
+# output dng path
+out_pth = os.path.join(root, name + '_mod' + '.dng')
+
+# Step 1: Load DNG file
+dng_file = smv_dng(raw_pth, verbose=False)
+
+# Step 2: initialize DNGEditor
+my_dng = DNGEditor(dng_file)
+
+# Step 3: extract CFA
+active_tile = my_dng.extract_CFA()
+# Noted that the 'active_tile' is usually a 2D grayscale image
+
+# Step 4: your application
+# denoising, deblurring ...
+# e.g. output = net(active_tile)
+output = active_tile
+
+# Step 5: Overwrite CFA
+my_dng.write_CFA(output, compression=1)
+# compression = 1 means no compression, 
+# currently, only compression == 1 is supported
+# Please click link below for more details: 
+# https://www.awaresystems.be/imaging/tiff/tifftags/compression.html
+
+# Step 6: Write DNG
+my_dng.write(out_pth)
+```

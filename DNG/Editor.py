@@ -175,7 +175,7 @@ class DNGEditor(object):
         # load Tile param
         ActiveArea = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ActiveArea, endian=self.endian)
 
-        tile_data = load_tile(self.dng.IFDTiles[CFA_IFD.ori_offset], ImageWidth, ImageLength, Compression,
+        tile_data = load_tile(self.dng.IFDTiles[self.CFA_IFD.ori_offset], ImageWidth, ImageLength, Compression,
                               dtype=get_dtype(BitsPerSample))
 
         if ActiveArea is not None:
@@ -183,12 +183,17 @@ class DNGEditor(object):
         else:
             active_tile = tile_data
 
-        self.logger.info(f'Load Tile, tile size: {tile_data.shape}; Compression: {Compression}')
+        self.logger.info(f'Load Tile {self.CFA_IFD.ori_offset}, tile size: {tile_data.shape}; Compression: {Compression}')
         self.logger.info(f'ActiveArea: {ActiveArea}, activeArea shape: {active_tile.shape}')
 
         return active_tile
 
     def write_CFA(self, data=None, compression=1):
+        try:
+            assert compression == 1
+        except:
+            raise NotImplemented('Available compression mode: 1')
+
         if self.CFA_IFD is None:
             self.extract_CFA(retrunCFAarray=False)
         endian = self.dng.endian
@@ -215,46 +220,15 @@ class DNGEditor(object):
         # Set compression
         set_tag_value([compression], self.CFA_IFD, Tag.Compression)
         self.dng.IFDTiles[self.CFA_IFD.ori_offset] = write_tile(tile_data, self.dng.IFDTiles[self.CFA_IFD.ori_offset],
-                                                                ImageWidth, ImageLength, compression, dtype=self.CFA_IFD)
-        self.logger.debug(f'Overwrite IFDTile: {self.CFA_IFD.ori_offset}')
+                                                                ImageWidth, ImageLength, compression, dtype=get_dtype(BitsPerSample))
+        self.logger.info(f'Overwrite IFDTile: {self.CFA_IFD.ori_offset}, Compression: {compression}')
 
         # Overwrite CFA_IFD
         self.dng.mainIFD = set_ifd(self.CFA_IFD, self.dng.mainIFD)
-        self.logger.debug(f'Overwrite IFD: {self.CFA_IFD.ori_offset}')
+        self.logger.info(f'Overwrite IFD: {self.CFA_IFD.ori_offset}')
 
 
     def write(self, path):
         self.dng.write(path)
         self.logger.info(f'Write dng to: {path}')
 
-if __name__ == '__main__':
-    import os
-    import matplotlib.pyplot as plt
-
-    logging.basicConfig(level=logging.INFO)
-
-    root = r'C:\Users\abner.yang\Downloads\raw_4097'
-    name = 'IMG_4097'
-    raw_pth = os.path.join(root, name + '.dng')
-    out_pth = os.path.join(root, name + '_mod' + '.dng')
-    npy_pth = os.path.join(root, name + '_raw.npy')
-
-    npy_data = np.load(npy_pth)
-    print(npy_data.shape)
-
-    dng_file = smv_dng(raw_pth, verbose=False)
-
-    my_dng = DNGEditor(dng_file)
-    active_tile = my_dng.extract_CFA()
-
-    plt.figure()
-    plt.title('raw')
-    plt.imshow(active_tile, cmap='gray')
-
-    plt.figure()
-    plt.title('output')
-    plt.imshow(npy_data, cmap='gray')
-    plt.show(block=True)
-
-    my_dng.write_CFA(npy_data)
-    my_dng.write(out_pth)
