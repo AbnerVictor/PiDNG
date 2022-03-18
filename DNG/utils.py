@@ -255,6 +255,7 @@ class dngTag(object):
 
 class dngIFD(object):
     def __init__(self):
+        self.ori_offset = -1
         self.tags = []
         self.NextIFDOffset = 0
 

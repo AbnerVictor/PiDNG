@@ -107,6 +107,7 @@ class smv_dng(object):
                 offset = subIFD_ids[i]
                 dngtag.subIFD.append(self.Ifd2dngIFD(self.IFDs[offset]))
 
+
         # load strips
         if tag.tag_num == 273 or tag.tag_num == 278 or tag.tag_num == 279:
             if tag.tag_num == 273:
@@ -148,7 +149,7 @@ class smv_dng(object):
 
     def Ifd2dngIFD(self, ifd: Ifd):
         IFD = dngIFD()
-
+        IFD.ori_offset = ifd.offset
         for tagID, tag in sorted(ifd.tags.items(), key=lambda x: x[0]):
             dngtag = self.Tag2dngTag(tag, ifd)
             IFD.tags.append(dngtag)
