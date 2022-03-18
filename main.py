@@ -1,4 +1,5 @@
-from DNG.Editor import DNGEditor
+from DNG.Editor import DNGEditor, get_int_tag_value
+from DNG.utils import Tag
 from DNG.dng import smv_dng
 import numpy as np
 import logging
@@ -22,10 +23,16 @@ if __name__ == '__main__':
     active_tile = my_dng.extract_CFA()
     # np.save(npy_pth, active_tile)
 
+    BlackLevel = get_int_tag_value(my_dng.CFA_IFD, tag_id=Tag.BlackLevel, endian=my_dng.endian)
+    print('blacklevel:', BlackLevel)
+
     npy_data = np.load(npy_pth)
     print(f'npy shape: {npy_data.shape}')
 
     assert active_tile.shape == npy_data.shape
+
+    my_dng.write_CFA(npy_data)
+    my_dng.write(out_pth)
 
     plt.figure()
     plt.title('raw')
@@ -35,6 +42,4 @@ if __name__ == '__main__':
     plt.title('output')
     plt.imshow(npy_data, cmap='gray')
 
-    my_dng.write_CFA(npy_data)
-    my_dng.write(out_pth)
     plt.show(block=True)

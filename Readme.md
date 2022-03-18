@@ -77,3 +77,29 @@ my_dng.write_CFA(output, compression=1)
 # Step 6: Write DNG
 my_dng.write(out_pth)
 ```
+
+## Load Tags
+
+```python
+from DNG.Editor import DNGEditor, get_int_tag_value
+from DNG.dng import smv_dng
+from DNG.utils import Tag
+
+import os
+
+root = r'C:\Users\abner.yang\Downloads\raw_4097'
+name = 'DSC_2849'
+
+# input dng path
+raw_pth = os.path.join(root, name + '.dng')
+
+dng_file = smv_dng(raw_pth, verbose=False)
+my_dng = DNGEditor(dng_file)
+
+# For example, we need to load black level of CFA
+# Step 1: Extract CFA
+active_tile = my_dng.extract_CFA()
+
+BlackLevel = get_int_tag_value(my_dng.CFA_IFD, tag_id=Tag.BlackLevel, endian=my_dng.endian)
+print(BlackLevel)
+```
