@@ -53,7 +53,7 @@ def load_tile(tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, dtype=n
                 tile_ = pylibjpeg.decode(data)
                 tile_.reshape(w, h)
             elif compression == 1:
-                tile_ = np.frombuffer(tile.data, dtype=dtype)
+                tile_ = np.frombuffer(data, dtype=dtype)
                 tile_.reshape(w, h)
             tiles.append(tile_)
 
@@ -107,7 +107,11 @@ class DNGEditor(object):
         ActiveArea = get_int_tag_value(ifd=CFA_IFD, tag_id=Tag.ActiveArea, endian=endian)
 
         tile = load_tile(self.dng.IFDTiles[CFA_IFD.ori_offset], ImageWidth, ImageLength, Compression, dtype=np.uint16)
-        active_tile = tile[ActiveArea[0]:ActiveArea[2], ActiveArea[1]:ActiveArea[3]]
+
+        if ActiveArea is not None:
+            active_tile = tile[ActiveArea[0]:ActiveArea[2], ActiveArea[1]:ActiveArea[3]]
+        else:
+            active_tile = tile
 
         self.logger.debug(f'Load Tile, tile size: {tile.shape}; Compression: {Compression}')
         self.logger.debug(f'ActiveArea: {ActiveArea}, activeArea shape: {active_tile.shape}')
@@ -121,7 +125,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
     root = r'C:\Users\abner.yang\Downloads\raw_4097'
-    name = 'IMG_4097'
+    name = 'M03-1318_000065'
     raw_pth = os.path.join(root, name + '.dng')
     dng_file = smv_dng(raw_pth, verbose=False)
 
