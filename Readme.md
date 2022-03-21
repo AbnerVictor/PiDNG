@@ -33,6 +33,14 @@ my_dng.write('new_dummy.dng')
 
 ## Editing DNG
 
+### Dependencies
+
+```bash
+pip install pylibjpeg[all]
+```
+
+### Extract Color Filter Array (CFA)
+
 ```python
 from DNG.Editor import DNGEditor
 from DNG.dng import smv_dng
@@ -78,6 +86,10 @@ my_dng.write_CFA(output, compression=1)
 my_dng.write(out_pth)
 ```
 
+### Future updates
+
+- Write CFA with lossless compression
+
 ## Load Tags
 
 ```python
@@ -103,3 +115,4 @@ active_tile = my_dng.extract_CFA()
 BlackLevel = get_int_tag_value(my_dng.CFA_IFD, tag_id=Tag.BlackLevel, endian=my_dng.endian)
 print(BlackLevel)
 ```
+

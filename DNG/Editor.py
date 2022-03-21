@@ -1,11 +1,9 @@
 from DNG.dng import smv_dng
 from DNG.utils import dngTag, dngIFD, dngTile, dngStrip, Tag
-import struct
 import pylibjpeg
+from pydicom.encoders import RLELosslessEncoder
 import numpy as np
 import logging
-from itertools import tee
-
 
 def get_tags(ifd: dngIFD, tag_id: tuple):
     for tag in ifd.tags:
@@ -109,6 +107,8 @@ def write_tile(data, tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, 
         # data to bytes
         for i in range(data.shape[0]):
             if compression == 7 or compression == 34892:
+                # 'rows', 'columns', 'samples_per_pixel', 'bits_allocated', 'bits_stored', 'pixel_representation', 'photometric_interpretation', 'number_of_frames'
+                tile_data = RLELosslessEncoder.encode(data[i, ...])
                 raise NotImplemented('Compression not implemented')
             elif compression == 1:
                 tile_data = data[i, ...].flatten().astype(dtype).tobytes()
@@ -122,11 +122,17 @@ def write_tile(data, tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, 
     except Exception as e:
         raise Exception(f'Load tiles failed {e}, compression type: {compression}')
 
-def get_dtype(bitspersample):
-    if bitspersample == 16:
-        return np.uint16
-    if bitspersample == 8:
-        return np.uint8
+def get_dtype(bitspersample, reverse=False):
+    if not reverse:
+        if bitspersample == 16:
+            return np.uint16
+        if bitspersample == 8:
+            return np.uint8
+    else:
+        if bitspersample == np.uint16:
+            return 16
+        if bitspersample == np.uint8:
+            return 8
 
 class DNGEditor(object):
     def __init__(self, DNG: smv_dng):
@@ -189,14 +195,13 @@ class DNGEditor(object):
         return active_tile
 
     def write_CFA(self, data=None, compression=1):
-        try:
-            assert compression == 1
-        except:
-            raise NotImplemented('Available compression mode: 1')
+        # try:
+        #     assert compression == 1
+        # except:
+        #     raise NotImplemented('Available compression mode: 1')
 
         if self.CFA_IFD is None:
             self.extract_CFA(retrunCFAarray=False)
-        endian = self.dng.endian
 
         Compression = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.Compression, endian=self.endian)[0]
         ImageWidth = get_int_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ImageWidth, endian=self.endian)[0]

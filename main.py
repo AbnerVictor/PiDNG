@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARNING)
 
     root = r'C:\Users\abner.yang\Downloads\raw_4097'
     name = 'IMG_4097'
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     assert active_tile.shape == npy_data.shape
 
-    my_dng.write_CFA(npy_data)
+    my_dng.write_CFA(npy_data, compression=1)
     my_dng.write(out_pth)
 
     plt.figure()
