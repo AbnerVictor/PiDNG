@@ -7,36 +7,36 @@ import logging
 import struct
 
 
-def unpack(Value, type):
+def unpack(Value, type, endian='<'):
     byte_cnt = len(Value) // type[1]
     if type == Type.Byte:
-        Value = struct.unpack('<%sB' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sB' % byte_cnt, Value)
     elif type == Type.Short:
-        Value = struct.unpack('<%sH' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sH' % byte_cnt, Value)
     elif type == Type.Long:
-        Value = struct.unpack('<%sL' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sL' % byte_cnt, Value)
     elif type == Type.Sbyte:
-        Value = struct.unpack('<%sb' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sb' % byte_cnt, Value)
     elif type == Type.Undefined:
-        Value = struct.unpack('<%sB' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sB' % byte_cnt, Value)
     elif type == Type.Sshort:
-        Value = struct.unpack('<%sh' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sh' % byte_cnt, Value)
     elif type == Type.Slong:
-        Value = struct.unpack('<%sl' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sl' % byte_cnt, Value)
     elif type == Type.Float:
-        Value = struct.unpack('<%sf' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sf' % byte_cnt, Value)
     elif type == Type.Double:
-        Value = struct.unpack('<%sd' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sd' % byte_cnt, Value)
     elif type == Type.Rational:
-        Value = struct.unpack('<%sL' % (byte_cnt * 2), Value)
+        Value = struct.unpack(endian + '%sL' % (byte_cnt * 2), Value)
         Value = np.array(Value[0::2], dtype=np.float32) / np.array(Value[1::2], dtype=np.float32)
     elif type == Type.Srational:
-        Value = struct.unpack('<%sl' % (byte_cnt * 2), Value)
+        Value = struct.unpack(endian + '%sl' % (byte_cnt * 2), Value)
         Value = np.array(Value[0::2], dtype=np.float32) / np.array(Value[1::2], dtype=np.float32)
     elif type == Type.Ascii:
-        Value = struct.unpack('<%ssx0L' % byte_cnt, bytearray(Value.encode("ascii")))
+        Value = struct.unpack(endian + '%ssx0L' % byte_cnt, bytearray(Value.encode("ascii")))
     elif type == Type.IFD:
-        Value = struct.unpack('<%sL' % byte_cnt, Value)
+        Value = struct.unpack(endian + '%sL' % byte_cnt, Value)
     return Value
 
 
@@ -80,10 +80,10 @@ def set_ifd(ifd: dngIFD, mainIFD: dngIFD):
 def get_digit_tag_value(ifd: dngIFD, tag_id: tuple, endian='little'):
     try:
         tag = get_tag(ifd=ifd, tag_id=tag_id)[1]
-        data = unpack(tag.Value, tag.Type[1])
+        data = unpack(tag.Value, tag.Type[1], '<' if endian == 'little' else '>')
         return data
     except Exception as e:
-        raise e
+        return None
 
 
 def set_tag_value(value, ifd: dngIFD, tag_id: tuple):
