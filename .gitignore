@@ -2,6 +2,7 @@
 devops-smv-smv_isp_yyitong-yyt_dev
 Legacy
 *.npy
+Adobe_DNG_Converter/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

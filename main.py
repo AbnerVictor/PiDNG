@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     logging.basicConfig(level=logging.WARNING)
 
-    root = r'C:\Users\abner.yang\Downloads\raw_4097'
+    root = r'\\192.168.100.201\Media-Dev\Experiment_Log\xin.yang\Experiment_backup\DNG_RAW'
     name = 'IMG_4097'
     raw_pth = os.path.join(root, name + '.dng')
     out_pth = os.path.join(root, name + '_mod' + '.dng')
@@ -50,9 +50,13 @@ if __name__ == '__main__':
 
     plt.figure()
     plt.title('output')
+    plt.imshow(active_tile_fp32, cmap='gray')
+
+    plt.figure()
+    plt.title('output')
     plt.imshow(active_tile_uint16, cmap='gray')
 
-    my_dng.write_CFA(active_tile_uint16, compression=1)
+    my_dng.write_CFA(active_tile, compression=1)
     my_dng.write(out_pth)
 
     plt.show(block=True)

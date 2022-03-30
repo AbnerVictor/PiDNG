@@ -6,7 +6,6 @@ import numpy as np
 import logging
 import struct
 
-
 def unpack(Value, type, endian='<'):
     byte_cnt = len(Value) // type[1]
     if type == Type.Byte:
@@ -251,7 +250,9 @@ class DNGEditor(object):
 
         if ActiveArea is not None:
             assert data.shape == tile_data[ActiveArea[0]:ActiveArea[2], ActiveArea[1]:ActiveArea[3]].shape
+            min_, max_ = data.min(), data.max()
             tile_data[ActiveArea[0]:ActiveArea[2], ActiveArea[1]:ActiveArea[3]] = data
+            tile_data = np.clip(tile_data, min_, max_)
         else:
             assert data.shape == tile_data.shape
             tile_data = data

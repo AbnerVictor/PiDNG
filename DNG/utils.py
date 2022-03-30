@@ -146,6 +146,9 @@ class Tag:
     DefaultBlackRender = (51110, Type.Long)
     NewRawImageDigest = (51111, Type.Byte)
 
+    # DNG extension
+    OriginalRawFileData = (50828, Type.Undefined)
+
 
 class dngHeader(object):
     def __init__(self):
