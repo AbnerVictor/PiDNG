@@ -135,6 +135,7 @@ class Tag:
     PreviewApplicationVersion = (50967, Type.Ascii)
     PreviewSettingsDigest = (50969, Type.Byte)
     PreviewColorSpace = (50970, Type.Long)
+    SubTileBlockSize = (50974, Type.Long)
     PreviewDateTime = (50971, Type.Ascii)
     NoiseProfile = (51041, Type.Double)
     TimeCodes = (51043, Type.Byte)

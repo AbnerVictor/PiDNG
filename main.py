@@ -3,6 +3,7 @@ from DNG.utils import Tag
 from DNG.dng import smv_dng
 import numpy as np
 import logging
+import rawpy
 
 import os
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
     root = r'\\192.168.100.201\Media-Dev\Experiment_Log\xin.yang\Experiment_backup\DNG_RAW'
-    name = 'IMG_4097_mod'
+    name = 'IMG_4097'
     raw_pth = os.path.join(root, name + '.dng')
     out_pth = os.path.join(root, name + '_mod' + '.dng')
     npy_pth = os.path.join(root, name + '_0322.npy')
@@ -31,11 +32,13 @@ if __name__ == '__main__':
     BlackLevel = get_digit_tag_value(my_dng.CFA_IFD, tag_id=Tag.BlackLevel, endian=my_dng.endian)
     WhiteLevel = get_digit_tag_value(my_dng.CFA_IFD, tag_id=Tag.WhiteLevel, endian=my_dng.endian)[0]
     LinearizationTable = get_digit_tag_value(my_dng.CFA_IFD, tag_id=Tag.LinearizationTable, endian=my_dng.endian)
+    SubTileBlockSize = get_digit_tag_value(my_dng.CFA_IFD, tag_id=Tag.SubTileBlockSize, endian=my_dng.endian)
     max_val = WhiteLevel - BlackLevel[0]
 
     print('blacklevel:', BlackLevel, '; whitelevel:', WhiteLevel)
     print('linearization table:', LinearizationTable)
     print('CFA min:', active_tile.min(), 'CFA max:', active_tile.max())
+    print('SubTileBlockSize:', SubTileBlockSize)
 
     active_tile_fp32 = np.clip(np.array((active_tile - BlackLevel[0]) / max_val, dtype=np.float32), 0.0, 1.0)
     print('Linear CFA min:', active_tile_fp32.min(), 'Linear CFA max:', active_tile_fp32.max())
@@ -49,14 +52,21 @@ if __name__ == '__main__':
     plt.imshow(active_tile, cmap='gray')
 
     plt.figure()
-    plt.title('output')
+    plt.title('output fp32')
     plt.imshow(active_tile_fp32, cmap='gray')
 
     plt.figure()
-    plt.title('output')
+    plt.title('output uint16')
     plt.imshow(active_tile_uint16, cmap='gray')
 
-    my_dng.write_CFA(active_tile, compression=1)
+    my_dng.write_CFA(active_tile_uint16, compression=1)
     my_dng.write(out_pth)
+
+    raw_file = rawpy.imread(out_pth)
+    raw_img = np.uint16(raw_file.raw_image)
+
+    plt.figure()
+    plt.title('rawpy loaded')
+    plt.imshow(raw_img, cmap='gray')
 
     plt.show(block=True)

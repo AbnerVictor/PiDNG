@@ -143,7 +143,8 @@ def write_tile(data, tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, 
                 # tile_data = RLELosslessEncoder.encode(data[i, ...])
                 raise NotImplemented(f'Compression type {compression} not implemented')
             elif compression == 1:
-                tile_data = data[i, ...].flatten().astype(dtype).tostring()
+                tile_data = data[i, ...]
+                tile_data = np.ascontiguousarray(tile_data, dtype=np.uint16).tobytes()
                 tile_datas.append(tile_data)
                 tile_bytecnts.append(len(tile_data))
 
