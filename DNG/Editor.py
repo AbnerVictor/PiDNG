@@ -96,8 +96,8 @@ def set_tag_value(value, ifd: dngIFD, tag_id: tuple):
 
 
 def load_tile(tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, dtype=np.uint16):
+    assert compression == 7 or compression == 34892 or compression == 1
     try:
-        assert compression == 7 or compression == 34892 or compression == 1
         tiles = []
         w = tile.tileWidth[0]
         h = tile.tileLength[0]
@@ -117,13 +117,14 @@ def load_tile(tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, dtype=n
         tiles = np.array(tiles).reshape(n_h, n_w, h, w)
         tiles = tiles.transpose(0, 2, 1, 3).reshape(n_h * h, n_w * w)
         return tiles
-    except:
-        raise NotImplemented(f'Load tiles failed, compression type: {compression}')
+    except Exception as e:
+        raise e
 
 
 def write_tile(data, tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, dtype=np.uint16):
+    assert compression == 7 or compression == 34892 or compression == 1
+
     try:
-        assert compression == 7 or compression == 34892 or compression == 1
         tile_datas = []
         tile_bytecnts = []
         w = tile.tileWidth[0]
@@ -139,10 +140,10 @@ def write_tile(data, tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, 
         for i in range(data.shape[0]):
             if compression == 7 or compression == 34892:
                 # 'rows', 'columns', 'samples_per_pixel', 'bits_allocated', 'bits_stored', 'pixel_representation', 'photometric_interpretation', 'number_of_frames'
-                tile_data = RLELosslessEncoder.encode(data[i, ...])
-                raise NotImplemented('Compression not implemented')
+                # tile_data = RLELosslessEncoder.encode(data[i, ...])
+                raise NotImplemented(f'Compression type {compression} not implemented')
             elif compression == 1:
-                tile_data = data[i, ...].flatten().astype(dtype).tobytes()
+                tile_data = data[i, ...].flatten().astype(dtype).tostring()
                 tile_datas.append(tile_data)
                 tile_bytecnts.append(len(tile_data))
 
@@ -151,7 +152,7 @@ def write_tile(data, tile: dngTile, ImageWidth=0, ImageLength=0, compression=1, 
 
         return tile
     except Exception as e:
-        raise Exception(f'Load tiles failed {e}, compression type: {compression}')
+        raise e
 
 
 def get_dtype(bitspersample, reverse=False):
@@ -245,6 +246,7 @@ class DNGEditor(object):
         # load Tile param
         ActiveArea = get_digit_tag_value(ifd=self.CFA_IFD, tag_id=Tag.ActiveArea, endian=self.endian)
 
+        self.logger.info(f'BitsPerSample: {BitsPerSample}')
         tile_data = load_tile(self.dng.IFDTiles[self.CFA_IFD.ori_offset], ImageWidth, ImageLength, Compression,
                               dtype=get_dtype(BitsPerSample))
 

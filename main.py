@@ -8,10 +8,10 @@ import os
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.INFO)
 
     root = r'\\192.168.100.201\Media-Dev\Experiment_Log\xin.yang\Experiment_backup\DNG_RAW'
-    name = 'IMG_4097'
+    name = 'IMG_4097_mod'
     raw_pth = os.path.join(root, name + '.dng')
     out_pth = os.path.join(root, name + '_mod' + '.dng')
     npy_pth = os.path.join(root, name + '_0322.npy')

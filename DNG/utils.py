@@ -354,6 +354,7 @@ class dngTile(object):
         self.tileLength = []
         self.byteCounts = []
         self.data = []
+        self.ori_byteCounts = None
 
     def tileCount(self):
         return len(self.offset)
@@ -368,23 +369,28 @@ class dngTile(object):
         ori_offsets = self.offset
         self.offset = [offset + sum(self.byteCounts[:i]) for i in range(self.tileCount())]
 
-        # update tag 324
-        def traverseIFD(ifd):
-            assert isinstance(ifd, dngIFD)
-            for tag in ifd.tags:
-                assert isinstance(tag, dngTag)
-                if tag.TagId == Tag.TileOffsets[0]:
-                    targetTag = copy.deepcopy(tag)
-                    targetTag.setValue(ori_offsets)
-                    if targetTag.Value == tag.Value:
-                        tag.setValue(self.offset)
-                        break
-                elif tag.subIFD:
-                    for ifd in tag.subIFD:
-                        traverseIFD(ifd)
-
         for ifd in IFDs:
-            traverseIFD(ifd)
+            self.traverseIFD(ifd, ori_offsets, self.ori_byteCounts)
+
+    def traverseIFD(self, ifd, ori_offsets, ori_byteCounts):
+        assert isinstance(ifd, dngIFD)
+        for tag in ifd.tags:
+            assert isinstance(tag, dngTag)
+            # update tag 324
+            if tag.TagId == Tag.TileOffsets[0]:
+                targetTag = copy.deepcopy(tag)
+                targetTag.setValue(ori_offsets)
+                if targetTag.Value == tag.Value:
+                    tag.setValue(self.offset)
+            # update tag 325
+            elif tag.TagId == Tag.TileByteCounts[0]:
+                targetTag = copy.deepcopy(tag)
+                targetTag.setValue(ori_byteCounts)
+                if targetTag.Value == tag.Value:
+                    tag.setValue(self.byteCounts)
+            elif tag.subIFD:
+                for ifd_ in tag.subIFD:
+                    self.traverseIFD(ifd_, ori_offsets, ori_byteCounts)
 
     def write(self):
         if not self.buf:

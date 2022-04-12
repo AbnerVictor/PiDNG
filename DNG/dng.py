@@ -143,6 +143,7 @@ class smv_dng(object):
             if tag.tag_num == 325:
                 # TileByteCounts
                 tile.byteCounts = tag.values
+                tile.ori_byteCounts = tag.values
                 pass
             self.IFDTiles[ifd.offset] = tile
         return dngtag
